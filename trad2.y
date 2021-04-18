@@ -37,6 +37,7 @@ char *to_string(int n)
 %token <cadena> STRING
 %token <cadena> MAIN          // identifica el comienzo del proc. main
 %token <cadena> WHILE         // identifica el bucle main
+%token <cadena> PUTS
 
 %type <cadena> expresion 
 %type <cadena> termino 
@@ -53,6 +54,7 @@ char *to_string(int n)
 %type <cadena> sentencias
 %type <cadena> r_asignacion
 %type <cadena> cuerpo_asignacion
+%type <cadena> impresion_string
 
 %right '='                    // es la ultima operacion que se debe realizar
 %left '+' '-'                 // menor orden de precedencia
@@ -120,8 +122,22 @@ sentencias: expresion ';' r_expr        {  strcpy (temp, "") ;
                                             strcat(temp, "\n") ;
                                             strcat (temp, $3) ;
                                             $$ = genera_cadena (temp) ;
-                                        }				
+                                        }		
+            |   impresion_string ';' r_expr		{  strcpy (temp, "") ;
+                                                strcat (temp, $1) ;
+                                                strcat(temp, "\n") ;
+                                                strcat (temp, $3) ;
+                                                $$ = genera_cadena (temp) ;
+                                                }
             ;          
+impresion_string: PUTS '(' STRING ')' {
+                                            strcpy (temp, "") ;
+                                            strcat (temp, "( print \"") ;
+                                            strcat (temp, $3) ;
+                                            strcat (temp, "\" ) ") ;
+                                            $$ = genera_cadena (temp) ;
+                                        }
+;
 
 impresion:  '$' r_impresion { strcpy (temp, "") ;
                             strcat (temp, $2) ;
@@ -256,6 +272,7 @@ typedef struct s_pal_reservadas { // para las palabras reservadas de C
 t_reservada pal_reservadas [] = { // define las palabras reservadas y los
     "main",        MAIN,           // y los token asociados
     "int",         INTEGER,
+    "puts",         PUTS,
     NULL,          0               // para marcar el fin de la tabla
 } ;
 
@@ -374,7 +391,7 @@ int yylex ()
     if (c == '.' || (c >= '0' && c <= '9')) {
          ungetc (c, stdin) ;
          scanf ("%d", &yylval.valor) ;
-        // printf ("\nDEV: NUMERO %d\n", yylval.valor) ;        // PARA DEPURAR
+         //printf ("\nDEV: NUMERO %d\n", yylval.valor) ;        // PARA DEPURAR
          return NUMERO ;
     }
 
@@ -391,10 +408,10 @@ int yylex ()
          yylval.cadena = genera_cadena (cadena) ;
          simbolo = busca_pal_reservada (yylval.cadena) ;
          if (simbolo == NULL) {    // no es palabra reservada -> identificador 
-            //   printf ("\nDEV: IDENTIF %s\n", yylval.cadena) ;    // PARA DEPURAR
+               //printf ("\nDEV: IDENTIF %s\n", yylval.cadena) ;    // PARA DEPURAR
                return (IDENTIF) ;
          } else {
-            //   printf ("\nDEV: OTRO %s\n", yylval.cadena) ;       // PARA DEPURAR
+               //printf ("\nDEV: OTRO %s\n", yylval.cadena) ;       // PARA DEPURAR
                return (simbolo->token) ;
          }
     }
