@@ -38,6 +38,8 @@ char *to_string(int n)
 %token <cadena> MAIN          // identifica el comienzo del proc. main
 %token <cadena> WHILE         // identifica el bucle main
 %token <cadena> PUTS
+%token <cadena> PRINTF
+
 
 %type <cadena> expresion 
 %type <cadena> termino 
@@ -139,10 +141,10 @@ impresion_string: PUTS '(' STRING ')' {
                                         }
 ;
 
-impresion:  '$' r_impresion { strcpy (temp, "") ;
-                            strcat (temp, $2) ;
-                            $$ = genera_cadena (temp) ;
-                        }
+impresion:  PRINTF '(' r_impresion ')' { strcpy (temp, "") ;
+                                        strcat (temp, $3) ;
+                                        $$ = genera_cadena (temp) ;
+                                        }
             ;            
 
 r_impresion: r_impresion ',' expresion { strcpy (temp, "") ;
@@ -272,7 +274,8 @@ typedef struct s_pal_reservadas { // para las palabras reservadas de C
 t_reservada pal_reservadas [] = { // define las palabras reservadas y los
     "main",        MAIN,           // y los token asociados
     "int",         INTEGER,
-    "puts",         PUTS,
+    "puts",        PUTS,
+    "printf",      PRINTF, 
     NULL,          0               // para marcar el fin de la tabla
 } ;
 
