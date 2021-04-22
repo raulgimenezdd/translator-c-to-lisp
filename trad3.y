@@ -1,3 +1,6 @@
+/*MOHAMED EL AAKIL MESAOUDI - RAÚL GIMÉNEZ DE DIOS - GRUPO 8
+100405967@alumnos.uc3m.es - 100405861@alumnos.uc3m.es
+*/
 %{                          // SECCION 1 Declaraciones de C-Yacc
 
 #include <stdio.h>
@@ -91,103 +94,101 @@ dec_funciones: funcion '}' dec_funciones {  strcpy (temp, "") ;
 axioma:   dec_variables dec_funciones { printf ("%s\n%s", $1, $2) ; }
         ;
 dec_variables: /* lambda */ { $$=""; }
-                | asignacion ';' dec_variables { strcpy (temp, "") ;
-                                                strcat (temp, $1) ;
-                                                strcat (temp, $3) ;
+                | asignacion ';' dec_variables { 
+                                                strcpy (temp, "") ;
+                                                sprintf(temp,"%s%s",$1,$3);
                                                 $$ = genera_cadena (temp) ;
                                                 }
             ;
 dec_funciones:  funcion_main '}'  { $$ = $1; }
             ;
 
-funcion_main: MAIN '(' ')' '{' sentencias { strcpy (temp, "") ;
-                                           strcat(temp, "( defun main ()\n") ;
-                                           strcat (temp, $5) ;
-                                           strcat(temp, ")");
-                                           $$ = genera_cadena (temp) ;
-                                        }
+funcion_main: MAIN '(' ')' '{' sentencias { 
+                                            strcpy (temp, "") ;
+                                            sprintf(temp,"( defun main ()\n%s)",$5);
+                                            $$ = genera_cadena (temp) ;                                          
+                                          }
             ;
-sentencias: expresion ';' r_expr        {  strcpy (temp, "") ;
-                                            strcat (temp, $1) ;
-                                            strcat(temp, "\n") ;
-                                            strcat (temp, $3) ;
+sentencias: expresion ';' r_expr        {   
+                                            strcpy (temp, "") ;
+                                            sprintf(temp,"%s\n%s",$1,$3);
                                             $$ = genera_cadena (temp) ;
                                         }
-            |   asignacion ';' r_expr	{  strcpy (temp, "") ;
-                                            strcat (temp, $1) ;
-                                            strcat(temp, "\n") ;
-                                            strcat (temp, $3) ;
+
+            |   asignacion ';' r_expr	{  
+                                            strcpy (temp, "") ;
+                                            sprintf(temp,"%s\n%s",$1,$3);
                                             $$ = genera_cadena (temp) ;
-                                        }				
-            |   impresion ';' r_expr	{  strcpy (temp, "") ;
-                                            strcat (temp, $1) ;
-                                            strcat(temp, "\n") ;
-                                            strcat (temp, $3) ;
+                                        }	
+
+            |   impresion ';' r_expr	{  
+                                            strcpy (temp, "") ;
+                                            sprintf(temp,"%s\n%s",$1,$3);
                                             $$ = genera_cadena (temp) ;
                                         }		
-            |   impresion_string ';' r_expr		{  strcpy (temp, "") ;
-                                                strcat (temp, $1) ;
-                                                strcat(temp, "\n") ;
-                                                strcat (temp, $3) ;
-                                                $$ = genera_cadena (temp) ;
+            |   impresion_string ';' r_expr		{  
+                                                    strcpy (temp, "") ;
+                                                    sprintf(temp,"%s\n%s",$1,$3);
+                                                    $$ = genera_cadena (temp) ;
                                                 }
             ;          
 impresion_string: PUTS '(' STRING ')' {
                                             strcpy (temp, "") ;
-                                            strcat (temp, "( print \"") ;
-                                            strcat (temp, $3) ;
-                                            strcat (temp, "\" ) ") ;
+                                            sprintf(temp,"( print \"%s\" )", $3);
                                             $$ = genera_cadena (temp) ;
                                         }
 ;
 
-impresion:  PRINTF '(' r_impresion ')' { strcpy (temp, "") ;
-                                        strcat (temp, $3) ;
+impresion:  PRINTF '(' r_impresion ')' { 
+                                        strcpy (temp, "") ;
+                                        sprintf(temp,"%s", $3);
                                         $$ = genera_cadena (temp) ;
-                                        }
+                                       }
             ;            
 
-r_impresion: r_impresion ',' expresion { strcpy (temp, "") ;
-                                        strcat (temp, $1) ;
-                                        strcat (temp, " ( print ") ;                                          
-                                        strcat (temp, $3) ;
-                                        strcat (temp, " ) ") ;                                          
-                                        $$ = genera_cadena (temp) ;}
-                | expresion  { strcpy (temp, "") ;
-                                strcat (temp, " ( print ") ;                                          
-                                strcat (temp, $1) ;
-                                strcat (temp, " ) ") ;                                          
-                                $$ = genera_cadena (temp) ;}
+r_impresion: r_impresion ',' expresion { 
+                                        strcpy (temp, "") ;
+                                        sprintf(temp,"%s ( print %s ) ", $1, $3);                                         
+                                        $$ = genera_cadena (temp) ;
+                                        }
+
+                | expresion { 
+                                strcpy (temp, "") ;
+                                sprintf(temp,"( print %s )", $1) ;                                          
+                                $$ = genera_cadena (temp) ;
+                            }
             ;
 
-asignacion: INTEGER r_asignacion      { strcpy (temp, "") ;
-                                          strcat (temp, $2) ;                                          
-                                          $$ = genera_cadena (temp) ;
+asignacion: INTEGER r_asignacion        { 
+                                            strcpy (temp, "") ;
+                                            sprintf(temp,"%s", $2) ;                                          
+                                            $$ = genera_cadena (temp) ;
                                         }
 
             ;
 
-r_asignacion:  r_asignacion ',' cuerpo_asignacion       { strcpy (temp, "") ;
-                                                          strcat (temp, $1) ;                                                         
-                                                          strcat (temp, $3) ;                                                                                                    
+r_asignacion:  r_asignacion ',' cuerpo_asignacion       {  
+                                                          strcpy (temp, "") ;
+                                                          sprintf(temp,"%s%s", $1, $3) ;                                                                                                   
                                                           $$ = genera_cadena (temp) ;
                                                         }
 
-            | cuerpo_asignacion                         { strcpy (temp, "") ; 
-                                                          strcat (temp, $1) ;                                                                                                    
+            | cuerpo_asignacion                         { 
+                                                          strcpy (temp, "") ; 
+                                                          sprintf(temp,"%s", $1) ;                                                                                                    
                                                           $$ = genera_cadena (temp) ;
                                                         }
 
             ;
-cuerpo_asignacion: IDENTIF '=' expresion                { strcpy (temp, "") ;
-                                                          sprintf (temp, "( setq %s ", $1) ;
-                                                          strcat (temp, $3) ;
-                                                          strcat (temp, " ) ") ;                                          
+cuerpo_asignacion: IDENTIF '=' expresion                { 
+                                                          strcpy (temp, "") ;
+                                                          sprintf (temp, "( setq %s %s ) ", $1, $3) ;                                       
                                                           $$ = genera_cadena (temp) ;
                                                         }
-                    | IDENTIF                           { strcpy (temp, "") ;
-                                                          sprintf (temp, "( setq %s ", $1) ;                                          
-                                                          strcat (temp, " 0 ) ") ;                                          
+
+                    | IDENTIF                           { 
+                                                          strcpy (temp, "") ;
+                                                          sprintf (temp, "( setq %s 0 ) ", $1) ;                                                                                    
                                                           $$ = genera_cadena (temp) ;
                                                         }
             ;
@@ -197,57 +198,57 @@ r_expr:         /* lambda */				{ $$ = ""; }
             ;
 
 expresion:      termino					{ $$ = $1; }
-            |   expresion '+' expresion   		{  strcpy (temp, "") ;
-                                                    strcat (temp, " ( ") ;
-                                                    strcat (temp, " + ") ;
-                                                    strcat (temp, $1) ;
-                                                    strcat (temp, $3) ;
-                                                    strcat (temp, " ) ") ;
-                                                    $$ = genera_cadena (temp) ; }
-            |   expresion '-' expresion   		{  strcpy (temp, "") ;
-                                                    strcat (temp, " ( ") ;
-                                                    strcat (temp, " - ") ;
-                                                    strcat (temp, $1) ;
-                                                    strcat (temp, $3) ;
-                                                    strcat (temp, " ) ") ;
-                                                    $$ = genera_cadena (temp) ; }
-            |   expresion '*' expresion   		{  strcpy (temp, "") ;
-                                                    strcat (temp, " ( ") ;
-                                                    strcat (temp, " * ") ;
-                                                    strcat (temp, $1) ;
-                                                    strcat (temp, $3) ;
-                                                    strcat (temp, " ) ") ;
-                                                    $$ = genera_cadena (temp) ; }
-            |   expresion '/' expresion   		{  strcpy (temp, "") ;
-                                                    strcat (temp, " ( ") ;
-                                                    strcat (temp, " / ") ;
-                                                    strcat (temp, $1) ;
-                                                    strcat (temp, $3) ;
-                                                    strcat (temp, " ) ") ;
-                                                    $$ = genera_cadena (temp) ; }
+            |   expresion '+' expresion   		{  
+                                                    strcpy (temp, "") ;
+                                                    sprintf (temp, "( + %s %s ) ", $1, $3);
+                                                    $$ = genera_cadena (temp) ; 
+                                                }
+                                                    
+            |   expresion '-' expresion   		{  
+                                                    strcpy (temp, "") ;
+                                                    sprintf (temp, "( - %s %s ) ", $1, $3);
+                                                    $$ = genera_cadena (temp) ; 
+                                                }
+
+            |   expresion '*' expresion   		{  
+                                                    strcpy (temp, "") ;
+                                                    sprintf (temp, "( * %s %s ) ", $1, $3);
+                                                    $$ = genera_cadena (temp) ; 
+                                                }
+            |   expresion '/' expresion   		{  
+                                                    strcpy (temp, "") ;
+                                                    sprintf (temp, "( / %s %s ) ", $1, $3);
+                                                    $$ = genera_cadena (temp) ; 
+                                                }
             ;
 
+
 termino:        operando				{ $$ = $1; }                          
-            |   '+' operando %prec SIGNO_UNARIO		{ strcpy (temp, "") ;
-                                                        strcat (temp, " + ") ;
-                                                        strcat (temp, $2) ;
-                                                        $$ = genera_cadena (temp) ; }
-            |   '-' operando %prec SIGNO_UNARIO		{  strcpy (temp, "") ;
-                                                        strcat (temp, " - ") ;
-                                                        strcat (temp, $2) ;
-                                                        $$ = genera_cadena (temp) ;}
+            |   '+' operando %prec SIGNO_UNARIO		{ 
+                                                        strcpy (temp, "") ;
+                                                        sprintf (temp, "+ $2");
+                                                        $$ = genera_cadena (temp) ; 
+                                                    }
+            |   '-' operando %prec SIGNO_UNARIO		{ 
+                                                        strcpy (temp, "") ;
+                                                        sprintf (temp, "- $2");
+                                                        $$ = genera_cadena (temp) ; 
+                                                    }
             ;
 
 operando:       IDENTIF				{   
                                         sprintf (temp, " %s ", $1) ;
-                                        $$ = genera_cadena (temp) ; } 
-            |   NUMERO					{ sprintf (temp, " %d ", $1) ;
-                                        $$ = genera_cadena (temp) ; } 
-            |   '(' expresion ')'			{  strcpy (temp, "") ;
-                                                strcat (temp, $2) ;
-                                                strcat (temp, " ( ") ;
-                                                strcat (temp, " ) ") ;
-                                                $$ = genera_cadena (temp) ; }
+                                        $$ = genera_cadena (temp) ; 
+                                    } 
+            |   NUMERO				{ 
+                                        sprintf (temp, " %d ", $1) ;
+                                        $$ = genera_cadena (temp) ; 
+                                    } 
+            |   '(' expresion ')'			{  
+                                                strcpy (temp, "") ;
+                                                sprintf(temp, "( %s )", $2);
+                                                $$ = genera_cadena (temp) ; 
+                                            }
             ;
 
 %%
