@@ -39,7 +39,8 @@ char *to_string(int n)
 %token <cadena> INTEGER       // identifica la definicion de un entero
 %token <cadena> STRING
 %token <cadena> MAIN          // identifica el comienzo del proc. main
-%token <cadena> WHILE         // identifica el bucle main
+%token <cadena> WHILE         // identifica el bucle while
+%token <cadena> FOR
 %token <cadena> PUTS
 %token <cadena> PRINTF
 %token <cadena> AND
@@ -72,7 +73,7 @@ char *to_string(int n)
 %type <cadena> bucle_while
 %type <cadena> condicional 
 %type <cadena> resto_condicional
-
+%type <cadena> bucle_for
 
 %right '='                    // es la ultima operacion que se debe realizar
 %left AND OR
@@ -150,6 +151,11 @@ sentencias: expresion ';' r_expr        {
                                                     sprintf(temp,"\n%s%s",$1,$2);
                                                     $$ = genera_cadena (temp) ;
                                                 }
+            |   bucle_for r_expr              {  
+                                                    strcpy (temp, "") ;
+                                                    sprintf(temp,"\n%s%s",$1,$2);
+                                                    $$ = genera_cadena (temp) ;
+                                                }
             |   condicional r_expr              {  
                                                     strcpy (temp, "") ;
                                                     sprintf(temp,"\n%s%s",$1,$2);
@@ -169,6 +175,12 @@ resto_condicional:  /* lambda */				{ $$ = ""; }
                                                     sprintf(temp,"%s ", $3);
                                                     $$ = genera_cadena (temp) ;
                                                 }
+            ;
+bucle_for: FOR '(' asignacion ';' expresion_bool ';' expresion ')' '{' sentencias '}'   {
+                                                                                            strcpy (temp, "") ;
+                                                                                            sprintf(temp,"( %s )\n ( loop while %s do %s \n%s)", $3, $5, $10, $7);
+                                                                                            $$ = genera_cadena (temp) ;
+                                                                                        }
             ;
 
 bucle_while: WHILE '(' expresion_bool ')' '{' sentencias '}'   {  
@@ -371,7 +383,8 @@ t_reservada pal_reservadas [] = { // define las palabras reservadas y los
     ">=",          GE, 
     "&&",          AND,
     "||",          OR,
-    "while",       WHILE, 
+    "while",       WHILE,
+    "for",         FOR, 
     "if",          IF,
     "else",        ELSE,
     NULL,          0               // para marcar el fin de la tabla
