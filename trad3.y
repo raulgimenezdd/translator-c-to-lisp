@@ -42,7 +42,12 @@ char *to_string(int n)
 %token <cadena> WHILE         // identifica el bucle main
 %token <cadena> PUTS
 %token <cadena> PRINTF
-
+%token <cadena> AND
+%token <cadena> OR
+%token <cadena> EQ
+%token <cadena> NEQ
+%token <cadena> LE
+%token <cadena> GE
 
 %type <cadena> expresion 
 %type <cadena> termino 
@@ -60,12 +65,15 @@ char *to_string(int n)
 %type <cadena> r_asignacion
 %type <cadena> cuerpo_asignacion
 %type <cadena> impresion_string
+%type <cadena> expresion_bool
+%type <cadena> bucle_while
 
 %right '='                    // es la ultima operacion que se debe realizar
+%left AND OR
+%left '>' '<' NEQ EQ LE GE
 %left '+' '-'                 // menor orden de precedencia
 %left '*' '/'                 // orden de precedencia intermedio
 %left SIGNO_UNARIO            // mayor orden de precedencia
-
 
 
 /******************** PARA POSTERIORES AMPLIACIONES ******************************/
@@ -131,7 +139,20 @@ sentencias: expresion ';' r_expr        {
                                                     sprintf(temp,"%s\n%s",$1,$3);
                                                     $$ = genera_cadena (temp) ;
                                                 }
-            ;          
+            |   bucle_while r_expr              {  
+                                                    strcpy (temp, "") ;
+                                                    sprintf(temp,"%s\n%s",$1,$2);
+                                                    $$ = genera_cadena (temp) ;
+                                                }
+            ;
+
+bucle_while: WHILE '(' expresion_bool ')' '{' sentencias '}'   {  
+                                                                strcpy (temp, "") ;
+                                                                sprintf(temp,"( loop while %s do %s )", $3, $6);
+                                                                $$ = genera_cadena (temp) ;
+                                                            }       
+            ;      
+
 impresion_string: PUTS '(' STRING ')' {
                                             strcpy (temp, "") ;
                                             sprintf(temp,"( print \"%s\" )", $3);
@@ -197,6 +218,48 @@ r_expr:         /* lambda */				{ $$ = ""; }
             |   sentencias					{ $$ = $1; }
             ;
 
+expresion_bool: expresion_bool AND expresion_bool       {  
+                                                        strcpy (temp, "") ;
+                                                        sprintf (temp, "( And %s %s ) ", $1, $3);
+                                                        $$ = genera_cadena (temp) ; 
+                                                        }
+            |   expresion_bool OR expresion_bool        {  
+                                                        strcpy (temp, "") ;
+                                                        sprintf (temp, "( Or %s %s ) ", $1, $3);
+                                                        $$ = genera_cadena (temp) ; 
+                                                        }
+            |   expresion EQ expresion      {  
+                                                    strcpy (temp, "") ;
+                                                    sprintf (temp, "( = %s %s ) ", $1, $3);
+                                                    $$ = genera_cadena (temp) ; 
+                                            }
+            |   expresion NEQ expresion     {  
+                                                    strcpy (temp, "") ;
+                                                    sprintf (temp, "( /= %s %s ) ", $1, $3);
+                                                    $$ = genera_cadena (temp) ; 
+                                            }
+            |   expresion GE expresion      {  
+                                                    strcpy (temp, "") ;
+                                                    sprintf (temp, "( >= %s %s ) ", $1, $3);
+                                                    $$ = genera_cadena (temp) ; 
+                                            }
+            |   expresion LE expresion      {  
+                                                    strcpy (temp, "") ;
+                                                    sprintf (temp, "( <= %s %s ) ", $1, $3);
+                                                    $$ = genera_cadena (temp) ; 
+                                            }
+            |   expresion '<' expresion     {  
+                                                    strcpy (temp, "") ;
+                                                    sprintf (temp, "( < %s %s ) ", $1, $3);
+                                                    $$ = genera_cadena (temp) ; 
+                                            }
+            |   expresion '>' expresion     {  
+                                                    strcpy (temp, "") ;
+                                                    sprintf (temp, "( > %s %s ) ", $1, $3);
+                                                    $$ = genera_cadena (temp) ; 
+                                            }
+            ;
+            
 expresion:      termino					{ $$ = $1; }
             |   expresion '+' expresion   		{  
                                                     strcpy (temp, "") ;
@@ -276,7 +339,14 @@ t_reservada pal_reservadas [] = { // define las palabras reservadas y los
     "main",        MAIN,           // y los token asociados
     "int",         INTEGER,
     "puts",        PUTS,
-    "printf",      PRINTF, 
+    "printf",      PRINTF,
+    "!=",          NEQ, 
+    "==",          EQ, 
+    "<=",          LE, 
+    ">=",          GE, 
+    "&&",          AND,
+    "||",          OR,
+    "while",       WHILE, 
     NULL,          0               // para marcar el fin de la tabla
 } ;
 
