@@ -48,6 +48,9 @@ char *to_string(int n)
 %token <cadena> NEQ
 %token <cadena> LE
 %token <cadena> GE
+%token <cadena> IF
+%token <cadena> ELSE
+
 
 %type <cadena> expresion 
 %type <cadena> termino 
@@ -67,6 +70,9 @@ char *to_string(int n)
 %type <cadena> impresion_string
 %type <cadena> expresion_bool
 %type <cadena> bucle_while
+%type <cadena> condicional 
+%type <cadena> resto_condicional
+
 
 %right '='                    // es la ultima operacion que se debe realizar
 %left AND OR
@@ -113,35 +119,54 @@ dec_funciones:  funcion_main '}'  { $$ = $1; }
 
 funcion_main: MAIN '(' ')' '{' sentencias { 
                                             strcpy (temp, "") ;
-                                            sprintf(temp,"( defun main ()\n%s)",$5);
+                                            sprintf(temp,"( defun main ()%s \n)",$5);
                                             $$ = genera_cadena (temp) ;                                          
                                           }
             ;
 sentencias: expresion ';' r_expr        {   
                                             strcpy (temp, "") ;
-                                            sprintf(temp,"%s\n%s",$1,$3);
+                                            sprintf(temp,"\n%s%s",$1,$3);
                                             $$ = genera_cadena (temp) ;
                                         }
 
             |   asignacion ';' r_expr	{  
                                             strcpy (temp, "") ;
-                                            sprintf(temp,"%s\n%s",$1,$3);
+                                            sprintf(temp,"\n%s%s",$1,$3);
                                             $$ = genera_cadena (temp) ;
                                         }	
 
             |   impresion ';' r_expr	{  
                                             strcpy (temp, "") ;
-                                            sprintf(temp,"%s\n%s",$1,$3);
+                                            sprintf(temp,"\n%s%s",$1,$3);
                                             $$ = genera_cadena (temp) ;
                                         }		
             |   impresion_string ';' r_expr		{  
                                                     strcpy (temp, "") ;
-                                                    sprintf(temp,"%s\n%s",$1,$3);
+                                                    sprintf(temp,"\n%s%s",$1,$3);
                                                     $$ = genera_cadena (temp) ;
                                                 }
             |   bucle_while r_expr              {  
                                                     strcpy (temp, "") ;
-                                                    sprintf(temp,"%s\n%s",$1,$2);
+                                                    sprintf(temp,"\n%s%s",$1,$2);
+                                                    $$ = genera_cadena (temp) ;
+                                                }
+            |   condicional r_expr              {  
+                                                    strcpy (temp, "") ;
+                                                    sprintf(temp,"\n%s%s",$1,$2);
+                                                    $$ = genera_cadena (temp) ;
+                                                }
+            ;
+
+condicional: IF '(' expresion_bool ')' '{' sentencias '}' resto_condicional  {  
+                                                                                strcpy (temp, "") ;
+                                                                                sprintf(temp,"( if %s %s %s\n)", $3, $6, $8);
+                                                                                $$ = genera_cadena (temp) ;
+                                                                            }
+            ;
+            
+resto_condicional:  /* lambda */				{ $$ = ""; }
+            |   ELSE '{' sentencias '}'         {   strcpy (temp, "") ;
+                                                    sprintf(temp,"%s ", $3);
                                                     $$ = genera_cadena (temp) ;
                                                 }
             ;
@@ -347,6 +372,8 @@ t_reservada pal_reservadas [] = { // define las palabras reservadas y los
     "&&",          AND,
     "||",          OR,
     "while",       WHILE, 
+    "if",          IF,
+    "else",        ELSE,
     NULL,          0               // para marcar el fin de la tabla
 } ;
 
