@@ -204,9 +204,9 @@ impresion:  PRINTF '(' r_impresion ')' {
                                        }
             ;            
 
-r_impresion: r_impresion ',' expresion { 
+r_impresion: expresion ',' r_impresion { 
                                         strcpy (temp, "") ;
-                                        sprintf(temp,"%s ( print %s ) ", $1, $3);                                         
+                                        sprintf(temp,"( print %s ) %s", $1, $3);                                         
                                         $$ = genera_cadena (temp) ;
                                         }
 
@@ -222,7 +222,6 @@ asignacion: INTEGER r_asignacion        {
                                             sprintf(temp,"%s", $2) ;                                          
                                             $$ = genera_cadena (temp) ;
                                         }
-
             ;
 
 r_asignacion:  r_asignacion ',' cuerpo_asignacion       {  
@@ -236,7 +235,6 @@ r_asignacion:  r_asignacion ',' cuerpo_asignacion       {
                                                           sprintf(temp,"%s", $1) ;                                                                                                    
                                                           $$ = genera_cadena (temp) ;
                                                         }
-
             ;
 cuerpo_asignacion: IDENTIF '=' expresion                { 
                                                           strcpy (temp, "") ;
