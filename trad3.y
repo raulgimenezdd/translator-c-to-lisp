@@ -67,8 +67,7 @@ char *to_string(int n)
 %type <cadena> declaracion
 %type <cadena> r_declaracion
 %type <cadena> tipo_declaracion
-
-//%type <cadena> funcion
+%type <cadena> funcion
 %type <cadena> sentencias
 %type <cadena> r_asignacion
 %type <cadena> impresion_string
@@ -86,31 +85,10 @@ char *to_string(int n)
 %left SIGNO_UNARIO            // mayor orden de precedencia
 
 
-/******************** PARA POSTERIORES AMPLIACIONES ******************************/
-/**********************************************************************************
-
-funcion: STRING '(' ')' '{' sentencias    { strcpy (temp, "") ;
-                                           sprintf (temp, "( defun %s ()", $1) ;
-                                           strcat (temp, $5) ;
-                                           strcat(temp, ")");
-                                           $$ = genera_cadena (temp) ;
-                                        }
-            ;
-dec_funciones: funcion '}' dec_funciones {  strcpy (temp, "") ;
-                                            strcat (temp, $1) ;
-                                            strcat (temp, $3) ;
-                                            $$ = genera_cadena (temp) ;
-                                        }
-                | funcion_main '}'  { $$ = $1; }
-            ;
-            
-************************************************************************************/
-
-
-
 %%
 axioma:   dec_variables dec_funciones { printf ("%s%s", $1, $2) ; }
         ;
+        
 dec_variables: /* lambda */ { $$=""; }
                 | declaracion ';' dec_variables { 
                                                 strcpy (temp, "") ;
@@ -118,8 +96,21 @@ dec_variables: /* lambda */ { $$=""; }
                                                 $$ = genera_cadena (temp) ;
                                                 }
             ;
-dec_funciones:  funcion_main '}'  { $$ = $1; }
+dec_funciones:  funcion '}' dec_funciones       { 
+                                                    strcpy (temp, "") ;
+                                                    sprintf(temp,"%s\n%s",$1,$3);
+                                                    $$ = genera_cadena (temp) ;
+                                                }
+                |   funcion_main '}'  { $$ = $1; }
             ;
+
+funcion:  IDENTIF '('')' '{' sentencias  { 
+                                            strcpy (temp, "") ;
+                                            sprintf(temp,"( defun %s ()%s \n)", $1,$5);
+                                            $$ = genera_cadena (temp) ;                                          
+                                        }
+            ;
+
 
 funcion_main: MAIN '(' ')' '{' sentencias { 
                                             strcpy (temp, "") ;
