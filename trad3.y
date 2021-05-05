@@ -64,10 +64,13 @@ char *to_string(int n)
 %type <cadena> funcion_main
 %type <cadena> dec_variables
 %type <cadena> dec_funciones
+%type <cadena> declaracion
+%type <cadena> r_declaracion
+%type <cadena> tipo_declaracion
+
 //%type <cadena> funcion
 %type <cadena> sentencias
 %type <cadena> r_asignacion
-%type <cadena> cuerpo_asignacion
 %type <cadena> impresion_string
 %type <cadena> expresion_bool
 %type <cadena> bucle_while
@@ -106,10 +109,10 @@ dec_funciones: funcion '}' dec_funciones {  strcpy (temp, "") ;
 
 
 %%
-axioma:   dec_variables dec_funciones { printf ("%s\n%s", $1, $2) ; }
+axioma:   dec_variables dec_funciones { printf ("%s%s", $1, $2) ; }
         ;
 dec_variables: /* lambda */ { $$=""; }
-                | asignacion ';' dec_variables { 
+                | declaracion ';' dec_variables { 
                                                 strcpy (temp, "") ;
                                                 sprintf(temp,"%s%s",$1,$3);
                                                 $$ = genera_cadena (temp) ;
@@ -124,11 +127,11 @@ funcion_main: MAIN '(' ')' '{' sentencias {
                                             $$ = genera_cadena (temp) ;                                          
                                           }
             ;
-sentencias: expresion ';' r_expr        {   
+sentencias: declaracion ';' r_expr	    {  
                                             strcpy (temp, "") ;
                                             sprintf(temp,"\n%s%s",$1,$3);
                                             $$ = genera_cadena (temp) ;
-                                        }
+                                        }                      
 
             |   asignacion ';' r_expr	{  
                                             strcpy (temp, "") ;
@@ -176,9 +179,9 @@ resto_condicional:  /* lambda */				{ $$ = ""; }
                                                     $$ = genera_cadena (temp) ;
                                                 }
             ;
-bucle_for: FOR '(' asignacion ';' expresion_bool ';' expresion ')' '{' sentencias '}'   {
+bucle_for: FOR '(' asignacion ';' expresion_bool ';' asignacion ')' '{' sentencias '}'   {
                                                                                             strcpy (temp, "") ;
-                                                                                            sprintf(temp,"( %s )\n ( loop while %s do %s \n%s)", $3, $5, $10, $7);
+                                                                                            sprintf(temp," %s \n ( loop while %s do %s \n%s)", $3, $5, $10, $7);
                                                                                             $$ = genera_cadena (temp) ;
                                                                                         }
             ;
@@ -197,11 +200,11 @@ impresion_string: PUTS '(' STRING ')' {
                                         }
 ;
 
-impresion:  PRINTF '(' r_impresion ')' { 
-                                        strcpy (temp, "") ;
-                                        sprintf(temp,"%s", $3);
-                                        $$ = genera_cadena (temp) ;
-                                       }
+impresion:  PRINTF '(' STRING ',' r_impresion ')'   { 
+                                                        strcpy (temp, "") ;
+                                                        sprintf(temp,"%s", $5);
+                                                        $$ = genera_cadena (temp) ;
+                                                    }
             ;            
 
 r_impresion: expresion ',' r_impresion { 
@@ -217,34 +220,52 @@ r_impresion: expresion ',' r_impresion {
                             }
             ;
 
-asignacion: INTEGER r_asignacion        { 
+declaracion: INTEGER r_declaracion      { 
                                             strcpy (temp, "") ;
                                             sprintf(temp,"%s", $2) ;                                          
                                             $$ = genera_cadena (temp) ;
                                         }
             ;
 
-r_asignacion:  r_asignacion ',' cuerpo_asignacion       {  
+r_declaracion: tipo_declaracion ',' r_declaracion   { 
+                                                        strcpy (temp, "") ;
+                                                        sprintf (temp, "%s\n%s", $1, $3) ;                                          
+                                                        $$ = genera_cadena (temp) ;
+                                                    }
+    |   tipo_declaracion                            { 
+                                                        strcpy (temp, "") ;
+                                                        sprintf (temp, "%s\n", $1) ;                                          
+                                                        $$ = genera_cadena (temp) ;
+                                                    }
+            ;
+
+tipo_declaracion: IDENTIF '[' NUMERO ']'    { 
+                                                strcpy (temp, "") ;
+                                                sprintf (temp, "( setq %s ( make-array %d ) ) ", $1, $3) ;                                          
+                                                $$ = genera_cadena (temp) ;
+                                            }
+    |   IDENTIF                             { 
+                                                strcpy (temp, "") ;
+                                                sprintf (temp, "( setq %s 0 ) ", $1) ;                                          
+                                                $$ = genera_cadena (temp) ;
+                                            }
+            ;
+
+asignacion:  r_asignacion ',' asignacion            {  
                                                           strcpy (temp, "") ;
-                                                          sprintf(temp,"%s%s", $1, $3) ;                                                                                                   
+                                                          sprintf(temp,"%s\n%s", $1, $3) ;                                                                                                   
                                                           $$ = genera_cadena (temp) ;
                                                         }
 
-            | cuerpo_asignacion                         { 
+            | r_asignacion                         { 
                                                           strcpy (temp, "") ; 
                                                           sprintf(temp,"%s", $1) ;                                                                                                    
                                                           $$ = genera_cadena (temp) ;
                                                         }
             ;
-cuerpo_asignacion: IDENTIF '=' expresion                { 
+r_asignacion: IDENTIF '=' expresion                     { 
                                                           strcpy (temp, "") ;
                                                           sprintf (temp, "( setq %s %s ) ", $1, $3) ;                                       
-                                                          $$ = genera_cadena (temp) ;
-                                                        }
-
-                    | IDENTIF                           { 
-                                                          strcpy (temp, "") ;
-                                                          sprintf (temp, "( setq %s 0 ) ", $1) ;                                                                                    
                                                           $$ = genera_cadena (temp) ;
                                                         }
             ;
