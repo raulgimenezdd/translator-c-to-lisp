@@ -212,23 +212,12 @@ r_impresion: expresion ',' r_impresion {
                                             sprintf(temp,"( print %s ) %s", $1, $3);                                         
                                             $$ = genera_cadena (temp) ;
                                         }
-            |   IDENTIF '[' NUMERO ']' ',' r_impresion  { 
-                                                            strcpy (temp, "") ;
-                                                            sprintf(temp,"( print ( aref %s %d ) ) %s", $1, $3, $6);                                         
-                                                            $$ = genera_cadena (temp) ;
-                                                        }
-
             |   expresion   { 
                                 strcpy (temp, "") ;
                                 sprintf(temp,"( print %s )", $1) ;                                          
                                 $$ = genera_cadena (temp) ;
                             }
 
-            |   IDENTIF '[' NUMERO ']'      { 
-                                                strcpy (temp, "") ;
-                                                sprintf(temp,"( print ( aref %s %d ) )", $1, $3) ;                                          
-                                                $$ = genera_cadena (temp) ;
-                                            }
             ;
 
 declaracion: INTEGER r_declaracion      { 
@@ -277,6 +266,11 @@ asignacion:  r_asignacion ',' asignacion            {
 r_asignacion: IDENTIF '=' expresion                     { 
                                                           strcpy (temp, "") ;
                                                           sprintf (temp, "( setq %s %s ) ", $1, $3) ;                                       
+                                                          $$ = genera_cadena (temp) ;
+                                                        }
+            | IDENTIF '[' NUMERO ']' '=' expresion      { 
+                                                          strcpy (temp, "") ;
+                                                          sprintf (temp, "( setf ( aref %s %d ) %s ) ", $1, $3, $6) ;                                       
                                                           $$ = genera_cadena (temp) ;
                                                         }
             ;
@@ -367,9 +361,14 @@ termino:        operando				{ $$ = $1; }
             ;
 
 operando:       IDENTIF				{   
-                                        sprintf (temp, " %s ", $1) ;
+                                        sprintf (temp, "%s", $1) ;
                                         $$ = genera_cadena (temp) ; 
                                     } 
+            |   IDENTIF	'[' NUMERO ']'			{   
+                                                    sprintf (temp, "( aref %s %d )", $1, $3) ;
+                                                    $$ = genera_cadena (temp) ; 
+                                                } 
+
             |   NUMERO				{ 
                                         sprintf (temp, " %d ", $1) ;
                                         $$ = genera_cadena (temp) ; 
