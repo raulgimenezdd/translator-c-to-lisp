@@ -68,6 +68,8 @@ char *to_string(int n)
 %type <cadena> r_declaracion
 %type <cadena> tipo_declaracion
 %type <cadena> funcion
+%type <cadena> argumentos
+%type <cadena> r_argumentos
 %type <cadena> sentencias
 %type <cadena> r_asignacion
 %type <cadena> impresion_string
@@ -104,13 +106,28 @@ dec_funciones:  funcion '}' dec_funciones       {
                 |   funcion_main '}'  { $$ = $1; }
             ;
 
-funcion:  IDENTIF '('')' '{' sentencias  { 
+funcion:  IDENTIF '(' argumentos ')' '{' sentencias  { 
                                             strcpy (temp, "") ;
-                                            sprintf(temp,"( defun %s ()%s \n)", $1,$5);
+                                            sprintf(temp,"( defun %s ( %s )%s \n)", $1, $3, $6);
                                             $$ = genera_cadena (temp) ;                                          
                                         }
             ;
 
+argumentos: /* lambda */				{ $$ = ""; }
+        |   r_argumentos                { $$ = $1; }
+        ;
+
+r_argumentos: INTEGER IDENTIF ',' r_argumentos  {  
+                                                    strcpy (temp, "") ;
+                                                    sprintf(temp,"%s %s",$2,$4);
+                                                    $$ = genera_cadena (temp) ;
+                                                }
+        |   INTEGER IDENTIF                     {  
+                                                    strcpy (temp, "") ;
+                                                    sprintf(temp,"%s", $2);
+                                                    $$ = genera_cadena (temp) ;
+                                                }
+        ;
 
 funcion_main: MAIN '(' ')' '{' sentencias { 
                                             strcpy (temp, "") ;
