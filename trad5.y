@@ -51,7 +51,7 @@ char *to_string(int n)
 %token <cadena> GE
 %token <cadena> IF
 %token <cadena> ELSE
-
+%token <cadena> RETURN
 
 %type <cadena> expresion 
 %type <cadena> termino 
@@ -59,7 +59,6 @@ char *to_string(int n)
 %type <cadena> asignacion
 %type <cadena> impresion
 %type <cadena> r_impresion
-%type <cadena> r_expr
 %type <cadena> axioma
 %type <cadena> funcion_main
 %type <cadena> dec_variables
@@ -78,12 +77,16 @@ char *to_string(int n)
 %type <cadena> condicional 
 %type <cadena> resto_condicional
 %type <cadena> bucle_for
+%type <cadena> return_final
+%type <cadena> llamada_funcion
+%type <cadena> argumentos_llamada
+%type <cadena> r_argumentos_llamada
 
 %right '='                    // es la ultima operacion que se debe realizar
 %left AND OR
 %left '>' '<' NEQ EQ LE GE
 %left '+' '-'                 // menor orden de precedencia
-%left '*' '/'                 // orden de precedencia intermedio
+%left '*' '/' '%'                // orden de precedencia intermedio
 %left SIGNO_UNARIO            // mayor orden de precedencia
 
 
@@ -106,11 +109,11 @@ dec_funciones:  funcion '}' dec_funciones       {
                 |   funcion_main '}'  { $$ = $1; }
             ;
 
-funcion:  IDENTIF '(' argumentos ')' '{' sentencias  { 
-                                            strcpy (temp, "") ;
-                                            sprintf(temp,"( defun %s ( %s )%s \n)", $1, $3, $6);
-                                            $$ = genera_cadena (temp) ;                                          
-                                        }
+funcion:  IDENTIF '(' argumentos ')' '{' sentencias return_final    { 
+                                                                        strcpy (temp, "") ;                                                                 
+                                                                        sprintf(temp,"( defun %s ( %s )%s\n%s\n)", $1, $3, $6, $7);
+                                                                        $$ = genera_cadena (temp) ;                                         
+                                                                    }
             ;
 
 argumentos: /* lambda */				{ $$ = ""; }
@@ -128,6 +131,14 @@ r_argumentos: INTEGER IDENTIF ',' r_argumentos  {
                                                     $$ = genera_cadena (temp) ;
                                                 }
         ;
+        
+return_final: /*lambda*/                    { $$ = ""; }
+                | RETURN expresion ';'      {  
+                                                strcpy (temp, "") ;
+                                                sprintf(temp,"%s", $2);
+                                                $$ = genera_cadena (temp) ;
+                                            }
+        ;   
 
 funcion_main: MAIN '(' ')' '{' sentencias { 
                                             strcpy (temp, "") ;
@@ -135,39 +146,46 @@ funcion_main: MAIN '(' ')' '{' sentencias {
                                             $$ = genera_cadena (temp) ;                                          
                                           }
             ;
-sentencias: declaracion ';' r_expr	    {  
-                                            strcpy (temp, "") ;
-                                            sprintf(temp,"\n%s%s",$1,$3);
-                                            $$ = genera_cadena (temp) ;
-                                        }                      
+            
+sentencias:     /*lambda*/                  { $$ = ""; }
+            |   declaracion ';' sentencias  {  
+                                                strcpy (temp, "") ;
+                                                sprintf(temp,"\n%s%s",$1,$3);
+                                                $$ = genera_cadena (temp) ;
+                                            }                      
 
-            |   asignacion ';' r_expr	{  
-                                            strcpy (temp, "") ;
-                                            sprintf(temp,"\n%s%s",$1,$3);
-                                            $$ = genera_cadena (temp) ;
-                                        }	
+            |   asignacion ';' sentencias	{  
+                                                strcpy (temp, "") ;
+                                                sprintf(temp,"\n%s%s",$1,$3);
+                                                $$ = genera_cadena (temp) ;
+                                            }	
 
-            |   impresion ';' r_expr	{  
-                                            strcpy (temp, "") ;
-                                            sprintf(temp,"\n%s%s",$1,$3);
-                                            $$ = genera_cadena (temp) ;
-                                        }		
-            |   impresion_string ';' r_expr		{  
-                                                    strcpy (temp, "") ;
-                                                    sprintf(temp,"\n%s%s",$1,$3);
-                                                    $$ = genera_cadena (temp) ;
-                                                }
-            |   bucle_while r_expr              {  
+            |   impresion ';' sentencias	{  
+                                                strcpy (temp, "") ;
+                                                sprintf(temp,"\n%s%s",$1,$3);
+                                                $$ = genera_cadena (temp) ;
+                                            }		
+            |   impresion_string ';' sentencias		{  
+                                                        strcpy (temp, "") ;
+                                                        sprintf(temp,"\n%s%s",$1,$3);
+                                                        $$ = genera_cadena (temp) ;
+                                                    }
+            |   llamada_funcion ';' sentencias		{  
+                                                        strcpy (temp, "") ;
+                                                        sprintf(temp,"\n%s%s",$1,$3);
+                                                        $$ = genera_cadena (temp) ;
+                                                    }
+            |   bucle_while sentencias          {  
                                                     strcpy (temp, "") ;
                                                     sprintf(temp,"\n%s%s",$1,$2);
                                                     $$ = genera_cadena (temp) ;
                                                 }
-            |   bucle_for r_expr              {  
+            |   bucle_for sentencias            {  
                                                     strcpy (temp, "") ;
                                                     sprintf(temp,"\n%s%s",$1,$2);
                                                     $$ = genera_cadena (temp) ;
                                                 }
-            |   condicional r_expr              {  
+            |   condicional sentencias          {  
                                                     strcpy (temp, "") ;
                                                     sprintf(temp,"\n%s%s",$1,$2);
                                                     $$ = genera_cadena (temp) ;
@@ -201,12 +219,35 @@ bucle_while: WHILE '(' expresion_bool ')' '{' sentencias '}'   {
                                                             }       
             ;      
 
-impresion_string: PUTS '(' STRING ')' {
+impresion_string: PUTS '(' STRING ')'   {
                                             strcpy (temp, "") ;
                                             sprintf(temp,"( print \"%s\" )", $3);
                                             $$ = genera_cadena (temp) ;
                                         }
 ;
+
+llamada_funcion: IDENTIF '(' argumentos_llamada ')' {
+                                                        strcpy (temp, "") ;
+                                                        sprintf(temp,"( %s %s )", $1, $3);
+                                                        $$ = genera_cadena (temp) ;
+                                                    }
+        ;
+
+argumentos_llamada: /* lambda */				{ $$ = ""; }
+        |   r_argumentos_llamada                { $$ = $1; }
+        ;
+
+r_argumentos_llamada: expresion ',' r_argumentos_llamada  {  
+                                                            strcpy (temp, "") ;
+                                                            sprintf(temp,"%s %s",$1,$3);
+                                                            $$ = genera_cadena (temp) ;
+                                                        }
+        |   expresion                           {  
+                                                    strcpy (temp, "") ;
+                                                    sprintf(temp,"%s", $1);
+                                                    $$ = genera_cadena (temp) ;
+                                                }
+        ;
 
 impresion:  PRINTF '(' STRING ',' r_impresion ')'   { 
                                                         strcpy (temp, "") ;
@@ -283,9 +324,6 @@ r_asignacion: IDENTIF '=' expresion                     {
                                                         }
             ;
 
-r_expr:         /* lambda */				{ $$ = ""; }
-            |   sentencias					{ $$ = $1; }
-            ;
 
 expresion_bool: expresion_bool AND expresion_bool       {  
                                                         strcpy (temp, "") ;
@@ -329,8 +367,7 @@ expresion_bool: expresion_bool AND expresion_bool       {
                                             }
             ;
             
-expresion:      termino					{ $$ = $1; }
-            |   expresion '+' expresion   		{  
+expresion:  expresion '+' expresion   		    {  
                                                     strcpy (temp, "") ;
                                                     sprintf (temp, "( + %s %s ) ", $1, $3);
                                                     $$ = genera_cadena (temp) ; 
@@ -352,10 +389,16 @@ expresion:      termino					{ $$ = $1; }
                                                     sprintf (temp, "( / %s %s ) ", $1, $3);
                                                     $$ = genera_cadena (temp) ; 
                                                 }
+            |   expresion '%' expresion   		{  
+                                                    strcpy (temp, "") ;
+                                                    sprintf (temp, "( %% %s %s ) ", $1, $3);
+                                                    $$ = genera_cadena (temp) ; 
+                                                }
+            |   termino					        { $$ = $1; } 
             ;
 
 
-termino:        operando				{ $$ = $1; }                          
+termino:        operando				            { $$ = $1; }                          
             |   '+' operando %prec SIGNO_UNARIO		{ 
                                                         strcpy (temp, "") ;
                                                         sprintf (temp, "+ $2");
@@ -378,12 +421,18 @@ operando:       IDENTIF				{
                                                 } 
 
             |   NUMERO				{ 
-                                        sprintf (temp, " %d ", $1) ;
+                                        sprintf (temp, "%d", $1) ;
                                         $$ = genera_cadena (temp) ; 
                                     } 
             |   '(' expresion ')'			{  
                                                 strcpy (temp, "") ;
-                                                sprintf(temp, "( %s )", $2);
+                                                //sprintf(temp, "( %s )", $2);
+                                                sprintf(temp, "%s", $2);
+                                                $$ = genera_cadena (temp) ; 
+                                            }
+            |   llamada_funcion			    {  
+                                                strcpy (temp, "") ;
+                                                sprintf(temp, "%s", $1);
                                                 $$ = genera_cadena (temp) ; 
                                             }
             ;
@@ -424,6 +473,7 @@ t_reservada pal_reservadas [] = { // define las palabras reservadas y los
     "for",         FOR, 
     "if",          IF,
     "else",        ELSE,
+    "return",      RETURN,
     NULL,          0               // para marcar el fin de la tabla
 } ;
 
