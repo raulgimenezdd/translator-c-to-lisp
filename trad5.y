@@ -9,6 +9,7 @@
 #include <stdlib.h>           // declaraciones para exit ()
 
 char temp [2048] ;
+char funcion_actual [400] ;
 
 #define FF fflush(stdout);    // para forzar la impresion inmediata
 
@@ -77,7 +78,7 @@ char *to_string(int n)
 %type <cadena> condicional 
 %type <cadena> resto_condicional
 %type <cadena> bucle_for
-%type <cadena> return_final
+%type <cadena> return
 %type <cadena> llamada_funcion
 %type <cadena> argumentos_llamada
 %type <cadena> r_argumentos_llamada
@@ -109,11 +110,17 @@ dec_funciones:  funcion '}' dec_funciones       {
                 |   funcion_main '}'  { $$ = $1; }
             ;
 
-funcion:  IDENTIF '(' argumentos ')' '{' sentencias return_final    { 
-                                                                        strcpy (temp, "") ;                                                                 
-                                                                        sprintf(temp,"( defun %s ( %s )%s\n%s\n)", $1, $3, $6, $7);
-                                                                        $$ = genera_cadena (temp) ;                                         
-                                                                    }
+funcion:   IDENTIF 
+                                                        { 
+                                                            strcpy (funcion_actual, "") ;    
+                                                            sprintf(funcion_actual,"%s", $1);
+                                                        }
+            '(' argumentos ')' '{' sentencias    
+                                                        { 
+                                                            strcpy (temp, "") ;  
+                                                            sprintf(temp,"( defun %s ( %s )%s\n)", $1, $4, $7);
+                                                            $$ = genera_cadena (temp) ;                                         
+                                                        }
             ;
 
 argumentos: /* lambda */				{ $$ = ""; }
@@ -132,19 +139,22 @@ r_argumentos: INTEGER IDENTIF ',' r_argumentos  {
                                                 }
         ;
         
-return_final: /*lambda*/                    { $$ = ""; }
-                | RETURN expresion ';'      {  
+return: RETURN expresion                    {  
                                                 strcpy (temp, "") ;
-                                                sprintf(temp,"%s", $2);
+                                                sprintf(temp,"( return-from %s %s )", funcion_actual, $2);
                                                 $$ = genera_cadena (temp) ;
                                             }
         ;   
 
-funcion_main: MAIN '(' ')' '{' sentencias { 
+funcion_main: MAIN                                      { 
+                                                            strcpy (funcion_actual, "") ;    
+                                                            sprintf(funcion_actual,"%s", $1);
+                                                        }
+'(' ')' '{' sentencias                  { 
                                             strcpy (temp, "") ;
-                                            sprintf(temp,"( defun main ()%s \n)",$5);
+                                            sprintf(temp,"( defun main ()%s \n)",$6);
                                             $$ = genera_cadena (temp) ;                                          
-                                          }
+                                        }
             ;
             
 sentencias:     /*lambda*/                  { $$ = ""; }
@@ -175,6 +185,11 @@ sentencias:     /*lambda*/                  { $$ = ""; }
                                                         sprintf(temp,"\n%s%s",$1,$3);
                                                         $$ = genera_cadena (temp) ;
                                                     }
+            |   return ';' sentencias		        {  
+                                                        strcpy (temp, "") ;
+                                                        sprintf(temp,"\n%s%s",$1,$3);
+                                                        $$ = genera_cadena (temp) ;
+                                                    }                                        
             |   bucle_while sentencias          {  
                                                     strcpy (temp, "") ;
                                                     sprintf(temp,"\n%s%s",$1,$2);
