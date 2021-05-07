@@ -92,7 +92,7 @@ char *to_string(int n)
 
 
 %%
-axioma:   dec_variables dec_funciones { printf ("%s%s", $1, $2) ; }
+axioma:   dec_variables dec_funciones { printf ("%s%s\n(main)", $1, $2) ; }
         ;
         
 dec_variables: /* lambda */ { $$=""; }
@@ -209,14 +209,14 @@ sentencias:     /*lambda*/                  { $$ = ""; }
 
 condicional: IF '(' expresion_bool ')' '{' sentencias '}' resto_condicional  {  
                                                                                 strcpy (temp, "") ;
-                                                                                sprintf(temp,"( if %s %s %s\n)", $3, $6, $8);
+                                                                                sprintf(temp,"( if %s \n( progn%s) %s\n)", $3, $6, $8);
                                                                                 $$ = genera_cadena (temp) ;
                                                                             }
             ;
             
 resto_condicional:  /* lambda */				{ $$ = ""; }
             |   ELSE '{' sentencias '}'         {   strcpy (temp, "") ;
-                                                    sprintf(temp,"%s ", $3);
+                                                    sprintf(temp,"\n( progn%s )", $3);
                                                     $$ = genera_cadena (temp) ;
                                                 }
             ;
@@ -406,7 +406,7 @@ expresion:  expresion '+' expresion   		    {
                                                 }
             |   expresion '%' expresion   		{  
                                                     strcpy (temp, "") ;
-                                                    sprintf (temp, "( %% %s %s ) ", $1, $3);
+                                                    sprintf (temp, "( mod %s %s ) ", $1, $3);
                                                     $$ = genera_cadena (temp) ; 
                                                 }
             |   termino					        { $$ = $1; } 
@@ -575,7 +575,7 @@ int yylex ()
 		     if (c == '@') {	// Si es la secuencia //@  ==> transcribimos la linea
 		          do {		// Se trata de codigo inline (Codigo embebido en C)
 		              c = getchar () ;
-		              putchar (c) ;
+		              // putchar (c) ;
 		          } while (c != '\n') ;
 		     } else {		// ==> comentario, ignorar la linea
 		          while (c != '\n') {

@@ -1457,7 +1457,7 @@ yyreduce:
     {
   case 2:
 #line 95 "trad5.y"
-                                      { printf ("%s%s", (yyvsp[-1].cadena), (yyvsp[0].cadena)) ; }
+                                      { printf ("%s%s\n(main)", (yyvsp[-1].cadena), (yyvsp[0].cadena)) ; }
 #line 1462 "trad5.tab.c"
     break;
 
@@ -1673,7 +1673,7 @@ yyreduce:
 #line 210 "trad5.y"
                                                                              {  
                                                                                 strcpy (temp, "") ;
-                                                                                sprintf(temp,"( if %s %s %s\n)", (yyvsp[-5].cadena), (yyvsp[-2].cadena), (yyvsp[0].cadena));
+                                                                                sprintf(temp,"( if %s \n( progn%s) %s\n)", (yyvsp[-5].cadena), (yyvsp[-2].cadena), (yyvsp[0].cadena));
                                                                                 (yyval.cadena) = genera_cadena (temp) ;
                                                                             }
 #line 1680 "trad5.tab.c"
@@ -1688,7 +1688,7 @@ yyreduce:
   case 28:
 #line 218 "trad5.y"
                                                 {   strcpy (temp, "") ;
-                                                    sprintf(temp,"%s ", (yyvsp[-1].cadena));
+                                                    sprintf(temp,"\n( progn%s )", (yyvsp[-1].cadena));
                                                     (yyval.cadena) = genera_cadena (temp) ;
                                                 }
 #line 1695 "trad5.tab.c"
@@ -2010,7 +2010,7 @@ yyreduce:
 #line 407 "trad5.y"
                                                         {  
                                                     strcpy (temp, "") ;
-                                                    sprintf (temp, "( %% %s %s ) ", (yyvsp[-2].cadena), (yyvsp[0].cadena));
+                                                    sprintf (temp, "( mod %s %s ) ", (yyvsp[-2].cadena), (yyvsp[0].cadena));
                                                     (yyval.cadena) = genera_cadena (temp) ; 
                                                 }
 #line 2017 "trad5.tab.c"
@@ -2453,7 +2453,7 @@ int yylex ()
 		     if (c == '@') {	// Si es la secuencia //@  ==> transcribimos la linea
 		          do {		// Se trata de codigo inline (Codigo embebido en C)
 		              c = getchar () ;
-		              putchar (c) ;
+		              // putchar (c) ;
 		          } while (c != '\n') ;
 		     } else {		// ==> comentario, ignorar la linea
 		          while (c != '\n') {
