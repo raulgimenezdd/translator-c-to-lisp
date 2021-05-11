@@ -303,9 +303,9 @@ r_declaracion: tipo_declaracion ',' r_declaracion   {
                                                     }
             ;
 
-tipo_declaracion: IDENTIF '[' NUMERO ']'    { 
+tipo_declaracion: IDENTIF '[' expresion ']'    { 
                                                 strcpy (temp, "") ;
-                                                sprintf (temp, "( setq %s ( make-array %d ) ) ", $1, $3) ;                                          
+                                                sprintf (temp, "( setq %s ( make-array %s ) ) ", $1, $3) ;                                          
                                                 $$ = genera_cadena (temp) ;
                                             }
     |   IDENTIF                             { 
@@ -332,9 +332,9 @@ r_asignacion: IDENTIF '=' expresion                     {
                                                           sprintf (temp, "( setq %s %s ) ", $1, $3) ;                                       
                                                           $$ = genera_cadena (temp) ;
                                                         }
-            | IDENTIF '[' NUMERO ']' '=' expresion      { 
+            | IDENTIF '[' expresion ']' '=' expresion      { 
                                                           strcpy (temp, "") ;
-                                                          sprintf (temp, "( setf ( aref %s %d ) %s ) ", $1, $3, $6) ;                                       
+                                                          sprintf (temp, "( setf ( aref %s %s ) %s ) ", $1, $3, $6) ;                                       
                                                           $$ = genera_cadena (temp) ;
                                                         }
             ;
@@ -430,8 +430,8 @@ operando:       IDENTIF				{
                                         sprintf (temp, "%s", $1) ;
                                         $$ = genera_cadena (temp) ; 
                                     } 
-            |   IDENTIF	'[' NUMERO ']'			{   
-                                                    sprintf (temp, "( aref %s %d )", $1, $3) ;
+            |   IDENTIF	'[' expresion ']'			{   
+                                                    sprintf (temp, "( aref %s %s )", $1, $3) ;
                                                     $$ = genera_cadena (temp) ; 
                                                 } 
 
